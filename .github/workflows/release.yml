@@ -1,0 +1,35 @@
+name: Auto Pull Request, Approve, and Merge
+on:
+  push:
+    branches:
+      - actions
+jobs:
+  create_pull_request:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+      name: checkout
+          
+    - name: Create pull request
+      id: cpr
+      uses: repo-sync/pull-request@v2
+      with:
+        token: ${{ secrets.TEST_SECRET }}
+        commit-message: 'Automatically created pull request'
+        title: 'Auto Pull Request'
+        branch: actions
+        base: master
+        delete-branch: true
+        
+    - uses: juliangruber/merge-pull-request-action@v1
+      name: create auto approve
+      with:
+        github-token: ${{ secrets.TEST_SECRET }}
+        number: ${{ steps.cpr.outputs.pr_number }}              
+    - name: Merge pull request
+      if: steps.cpr.outputs.pr_number == 'created'
+      uses: peter-evans/enable-pull-request-automerge@v2
+      with:
+        token: ${{ secrets.TEST_SECRET }}
+        pull-request-number: ${{ steps.cpr.outputs.pr_number }}
+        method: squash
